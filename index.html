@@ -152,9 +152,82 @@
     .carousel-dots .dot.active {
       background: white;
     }
+
+    .urgent-panel {
+      position: fixed;
+      top: 50px;
+      left: 20px;
+      width: 260px;
+      background: #fff;
+      border-radius: 10px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.18);
+      overflow: hidden;
+      z-index: 10;
+    }
+
+    .urgent-panel h2 {
+      margin: 0;
+      padding: 12px 14px;
+      font-size: 16px;
+      color: #fff;
+      background: #d92c2c;
+    }
+
+    .urgent-box {
+      height: 200px;
+      overflow: hidden;
+    }
+
+    .urgent-list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+
+    .urgent-list li {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 10px 14px;
+      border-bottom: 1px solid #f0f0f0;
+    }
+
+    .urgent-list li:nth-child(odd) {
+      background: #fdeeee;
+    }
+
+    .urgent-list li:nth-child(even) {
+      background: #ffffff;
+    }
+
+    .urgent-due {
+      flex: none;
+      font-size: 13px;
+      color: #d92c2c;
+      background: #fff3f3;
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+
+    @keyframes urgent-scroll {
+      0% {
+        transform: translateY(0);
+      }
+      100% {
+        transform: translateY(-50%);
+      }
+    }
   </style>
 </head>
 <body>
+  <div class="urgent-panel">
+    <h2>紧急事项</h2>
+    <div class="urgent-box" id="urgentBox">
+      <ul class="urgent-list" id="urgentList"></ul>
+    </div>
+  </div>
+
   <div class="app">
     <h1>胡晓飞待办</h1>
 
@@ -309,6 +382,8 @@
 
       const left = todos.filter(todo => !todo.completed).length;
       stats.textContent = `共 ${todos.length} 项，还剩 ${left} 项没完成`;
+
+      renderUrgent();
     }
 
     let sortAsc = true;
@@ -365,6 +440,96 @@
     });
 
     renderTodos();
+
+    /* 紧急事项列表 */
+    function getUrgentItems() {
+      const pending = todos.filter(todo => !todo.completed && todo.due);
+
+      if (pending.length === 0) {
+        return [];
+      }
+
+      const now = Date.now();
+      const DAY_MS = 24 * 60 * 60 * 1000;
+
+      return pending
+        .map(todo => {
+          const dueEnd = new Date(todo.due + "T23:59:59").getTime();
+          const diff = Math.abs(dueEnd - now);
+          return { todo, diff };
+        })
+        .filter(item => item.diff <= DAY_MS)
+        .sort((a, b) => a.diff - b.diff)
+        .map(item => ({ text: item.todo.text, due: item.todo.due }));
+    }
+
+    function renderUrgent() {
+      const list = document.getElementById("urgentList");
+      const box = document.getElementById("urgentBox");
+
+      list.style.animation = "none";
+      list.innerHTML = "";
+
+      const items = getUrgentItems();
+
+      if (items.length === 0) {
+        const empty = document.createElement("li");
+        empty.textContent = "暂无紧急事项";
+        empty.style.justifyContent = "center";
+        empty.style.color = "#999";
+        list.appendChild(empty);
+        return;
+      }
+
+      function buildSet() {
+        const fragment = document.createDocumentFragment();
+
+        items.forEach(item => {
+          const li = document.createElement("li");
+          const text = document.createElement("span");
+          text.textContent = item.text;
+
+          const due = document.createElement("span");
+          due.className = "urgent-due";
+          due.textContent = item.due;
+
+          li.appendChild(text);
+          li.appendChild(due);
+          fragment.appendChild(li);
+        });
+
+        return fragment;
+      }
+
+      list.appendChild(buildSet());
+
+      const setHeight = list.scrollHeight;
+      const boxHeight = box.clientHeight;
+
+      let copiesPerHalf = 1;
+      if (setHeight > 0 && boxHeight > 0) {
+        copiesPerHalf = Math.ceil(boxHeight / setHeight);
+      }
+      copiesPerHalf = Math.max(1, copiesPerHalf);
+
+      if ((copiesPerHalf * items.length) % 2 !== 0) {
+        copiesPerHalf += 1;
+      }
+
+      for (let i = 1; i < copiesPerHalf; i++) {
+        list.appendChild(buildSet());
+      }
+
+      for (let i = 0; i < copiesPerHalf; i++) {
+        list.appendChild(buildSet());
+      }
+
+      const halfCount = copiesPerHalf * items.length;
+      const duration = Math.max(6, halfCount * 1.5);
+
+      void list.offsetWidth;
+      list.style.animation = `urgent-scroll ${duration}s linear infinite`;
+    }
 
     /* 轮播模块 */
     const track = document.getElementById("carouselTrack");
