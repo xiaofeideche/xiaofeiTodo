@@ -9,8 +9,8 @@
       max-width: 900px;
       margin: 60px auto;
       padding: 0 20px;
-      background: #f7f7f7;
-      color: #222;
+      background: skyblue;
+      color: #0f2d53;
     }
 
     .app {
@@ -119,10 +119,28 @@
     const clearCompletedButton = document.getElementById("clearCompletedButton");
     const exportButton = document.getElementById("exportButton");
 
-    const todos = [
+    const STORAGE_KEY = "markTodo.todos";
+
+    const defaultTodos = [
       { text: "关注「马克的技术工作坊」", completed: false },
       { text: "给这期 Git 教程点赞", completed: true }
     ];
+
+    function loadTodos() {
+      const raw = localStorage.getItem(STORAGE_KEY);
+
+      if (raw) {
+        return JSON.parse(raw);
+      }
+
+      return defaultTodos.map(todo => ({ ...todo }));
+    }
+
+    function saveTodos() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(todos));
+    }
+
+    const todos = loadTodos();
 
     function isOverdue(todo) {
       if (!todo.due || todo.completed) {
@@ -139,6 +157,7 @@
       todos.length = 0;
       todos.push(...remaining);
 
+      saveTodos();
       renderTodos();
     }
 
@@ -157,6 +176,7 @@
         todo.completed = true;
       });
 
+      saveTodos();
       renderTodos();
     }
 
@@ -177,6 +197,7 @@
 
         checkbox.addEventListener("change", () => {
           todos[index].completed = checkbox.checked;
+          saveTodos();
           renderTodos();
         });
 
@@ -196,6 +217,7 @@
 
         deleteButton.addEventListener("click", () => {
           todos.splice(index, 1);
+          saveTodos();
           renderTodos();
         });
 
@@ -229,6 +251,7 @@
       sortButton.textContent = sortAsc ? "排序 ↑" : "排序 ↓";
       sortAsc = !sortAsc;
 
+      saveTodos();
       renderTodos();
     }
 
@@ -247,6 +270,7 @@
 
       dueInput.value = "";
       todoInput.value = "";
+      saveTodos();
       renderTodos();
     }
 
