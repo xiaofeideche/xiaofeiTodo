@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>登录 - 胡晓飞待办</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #87ceeb 0%, #5b9bd5 100%);
+      color: #0f2d53;
+      font-family: "Microsoft YaHei", "PingFang SC", Arial, sans-serif;
+      padding: 20px;
+    }
+
+    .login-card {
+      width: 100%;
+      max-width: 380px;
+      background: white;
+      padding: 36px 32px;
+      border-radius: 14px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
+    }
+
+    h1 {
+      margin: 0 0 6px;
+      font-size: 26px;
+      text-align: center;
+      color: #0f2d53;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: #888;
+      font-size: 14px;
+      margin-bottom: 28px;
+    }
+
+    .field {
+      margin-bottom: 18px;
+    }
+
+    label {
+      display: block;
+      font-size: 14px;
+      margin-bottom: 6px;
+      color: #0f2d53;
+    }
+
+    input[type="text"],
+    input[type="password"] {
+      width: 100%;
+      padding: 12px 14px;
+      font-size: 16px;
+      border: 1px solid #d0d7de;
+      border-radius: 8px;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    input[type="text"]:focus,
+    input[type="password"]:focus {
+      border-color: #5b9bd5;
+      box-shadow: 0 0 0 3px rgba(91, 155, 213, 0.2);
+    }
+
+    .options-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+      font-size: 14px;
+    }
+
+    .options-row label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin: 0;
+      cursor: pointer;
+      color: #555;
+    }
+
+    .options-row a {
+      color: #5b9bd5;
+      text-decoration: none;
+    }
+
+    .options-row a:hover {
+      text-decoration: underline;
+    }
+
+    button {
+      width: 100%;
+      padding: 12px 16px;
+      font-size: 16px;
+      border: none;
+      border-radius: 8px;
+      background: #0f2d53;
+      color: white;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    button:hover {
+      background: #1a3f70;
+    }
+
+    button:disabled {
+      opacity: 0.6;
+      cursor: default;
+    }
+
+    .register-link {
+      text-align: center;
+      font-size: 14px;
+      color: #888;
+      margin-top: 22px;
+    }
+
+    .register-link a {
+      color: #5b9bd5;
+      text-decoration: none;
+    }
+
+    .register-link a:hover {
+      text-decoration: underline;
+    }
+
+    .error {
+      color: #d92c2c;
+      font-size: 14px;
+      min-height: 20px;
+      margin-bottom: 12px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="login-card">
+    <h1>胡晓飞待办</h1>
+    <p class="subtitle">登录你的账号</p>
+
+    <div class="error" id="errorMessage"></div>
+
+    <div class="field">
+      <label for="username">用户名</label>
+      <input id="username" type="text" placeholder="请输入用户名" autocomplete="username">
+    </div>
+
+    <div class="field">
+      <label for="password">密码</label>
+      <input id="password" type="password" placeholder="请输入密码" autocomplete="current-password">
+    </div>
+
+    <div class="options-row">
+      <label>
+        <input id="remember" type="checkbox"> 记住我
+      </label>
+      <a href="#" id="forgotLink">忘记密码？</a>
+    </div>
+
+    <button id="loginButton">登录</button>
+
+    <p class="register-link">还没有账号？<a href="#" id="registerLink">立即注册</a></p>
+  </div>
+
+  <script>
+    const usernameInput = document.getElementById("username");
+    const passwordInput = document.getElementById("password");
+    const rememberInput = document.getElementById("remember");
+    const loginButton = document.getElementById("loginButton");
+    const errorMessage = document.getElementById("errorMessage");
+
+    const REMEMBER_KEY = "markTodo.username";
+
+    const savedUsername = localStorage.getItem(REMEMBER_KEY);
+    if (savedUsername) {
+      usernameInput.value = savedUsername;
+      rememberInput.checked = true;
+    }
+
+    function showError(message) {
+      errorMessage.textContent = message;
+    }
+
+    function clearError() {
+      errorMessage.textContent = "";
+    }
+
+    async function handleLogin() {
+      clearError();
+
+      const username = usernameInput.value.trim();
+      const password = passwordInput.value;
+
+      if (!username) {
+        showError("请输入用户名");
+        usernameInput.focus();
+        return;
+      }
+
+      if (!password) {
+        showError("请输入密码");
+        passwordInput.focus();
+        return;
+      }
+
+      loginButton.disabled = true;
+      loginButton.textContent = "登录中...";
+
+      try {
+        await new Promise(resolve => setTimeout(resolve, 800));
+
+        if (rememberInput.checked) {
+          localStorage.setItem(REMEMBER_KEY, username);
+        } else {
+          localStorage.removeItem(REMEMBER_KEY);
+        }
+
+        window.location.href = "index.html";
+      } catch (error) {
+        showError("登录失败，请稍后重试");
+        loginButton.disabled = false;
+        loginButton.textContent = "登录";
+      }
+    }
+
+    loginButton.addEventListener("click", handleLogin);
+
+    passwordInput.addEventListener("keydown", event => {
+      if (event.key === "Enter") {
+        handleLogin();
+      }
+    });
+
+    usernameInput.addEventListener("keydown", event => {
+      if (event.key === "Enter") {
+        passwordInput.focus();
+      }
+    });
+  </script>
+</body>
+</html>
